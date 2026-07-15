@@ -27,7 +27,7 @@ namespace ApiSalonyar.Models
         public DateTime? UpdatedAt { get; set; }
         public bool IsDeleted { get; set; }
 
-        public virtual Branch Branch { get; set; } = null!;
+        public virtual Branch? Branch { get; set; } = null!;
         public virtual Profession? Profession { get; set; }
         public virtual ICollection<PatientVisit> PatientVisits { get; set; }
         public virtual ICollection<RoomReservation> RoomReservations { get; set; }

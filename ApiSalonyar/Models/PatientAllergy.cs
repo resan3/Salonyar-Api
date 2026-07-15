@@ -9,7 +9,7 @@ namespace ApiSalonyar.Models
         public int AllergyId { get; set; }
         public string? Note { get; set; }
 
-        public virtual Allergy Allergy { get; set; } = null!;
-        public virtual Patient Patient { get; set; } = null!;
+        public virtual Allergy? Allergy { get; set; } = null!;
+        public virtual Patient? Patient { get; set; } = null!;
     }
 }

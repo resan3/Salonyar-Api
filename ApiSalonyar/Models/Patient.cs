@@ -38,13 +38,13 @@ namespace ApiSalonyar.Models
         public bool IsDeleted { get; set; }
 
         public virtual BloodType? BloodType { get; set; }
-        public virtual Branch Branch { get; set; } = null!;
+        public virtual Branch? Branch { get; set; } = null!;
         public virtual Gender? Gender { get; set; }
         public virtual MaritalStatus? MaritalStatus { get; set; }
         public virtual ReferralSource? ReferralSource { get; set; }
-        public virtual ICollection<PatientAllergy> PatientAllergies { get; set; }
+        public virtual ICollection<PatientAllergy>? PatientAllergies { get; set; }
         public virtual ICollection<PatientConsentForm> PatientConsentForms { get; set; }
-        public virtual ICollection<PatientDisease> PatientDiseases { get; set; }
+        public virtual ICollection<PatientDisease>? PatientDiseases { get; set; }
         public virtual ICollection<PatientVisit> PatientVisits { get; set; }
         public virtual ICollection<RoomReservation> RoomReservations { get; set; }
     }
