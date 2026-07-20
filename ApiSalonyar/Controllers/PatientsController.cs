@@ -54,8 +54,23 @@ namespace ApiSalonyar.Controllers
         [HttpPost]
         public async Task<ActionResult<Patient>> PostPatient(Patient patient)
         {
+
+
+            ModelState.Clear();
             patient.CreatedAt = DateTime.Now;
             patient.IsDeleted = false;
+            patient.BranchId = patient.BranchId == 0 ? 1 : patient.BranchId;
+
+            // کد ملی موقت یکتا
+            if (string.IsNullOrEmpty(patient.NationalCode))
+                patient.NationalCode = DateTime.Now.Ticks.ToString().Substring(0, 15);
+
+            // چک تکراری نبودن کد ملی
+            var exists = await _context.Patients
+                .AnyAsync(x => x.NationalCode == patient.NationalCode && !x.IsDeleted);
+            if (exists)
+                patient.NationalCode = DateTime.Now.Ticks.ToString().Substring(0, 15);
+
 
             _context.Patients.Add(patient);
             await _context.SaveChangesAsync();

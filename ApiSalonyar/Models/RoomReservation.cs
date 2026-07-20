@@ -21,12 +21,13 @@ namespace ApiSalonyar.Models
         public DateTime CreatedAt { get; set; }
         public bool IsDeleted { get; set; }
 
-        public virtual Branch Branch { get; set; } = null!;
+        // ✅ فقط ? - بدون = null!
+        public virtual Branch? Branch { get; set; }
         public virtual User? CreatedByUser { get; set; }
-        public virtual Patient Patient { get; set; } = null!;
-        public virtual ReservationStatus ReservationStatus { get; set; } = null!;
-        public virtual Room Room { get; set; } = null!;
-        public virtual staff Staff { get; set; } = null!;
+        public virtual Patient? Patient { get; set; }
+        public virtual ReservationStatus? ReservationStatus { get; set; }
+        public virtual Room? Room { get; set; }
+        public virtual staff? Staff { get; set; }
         public virtual Treatment? Treatment { get; set; }
         public virtual PatientVisit? Visit { get; set; }
     }

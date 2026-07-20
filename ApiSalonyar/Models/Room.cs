@@ -19,8 +19,8 @@ namespace ApiSalonyar.Models
         public DateTime CreatedAt { get; set; }
         public bool IsDeleted { get; set; }
 
-        public virtual Branch Branch { get; set; } = null!;
+        public virtual Branch? Branch { get; set; } = null!;
         public virtual RoomUsageType? RoomUsageType { get; set; }
-        public virtual ICollection<RoomReservation> RoomReservations { get; set; }
+        public virtual ICollection<RoomReservation>? RoomReservations { get; set; }
     }
 }
