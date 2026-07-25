@@ -9,100 +9,84 @@ namespace ApiSalonyar.Controllers
     public class PatientVisitsController : ControllerBase
     {
         private readonly ClinicDbContext _context;
+        public PatientVisitsController(ClinicDbContext context) => _context = context;
 
-        public PatientVisitsController(ClinicDbContext context)
-        {
-            _context = context;
-        }
-
-        // GET: api/PatientVisits
+        // GET: api/PatientVisits?patientId=5
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<PatientVisit>>> GetPatientVisits()
+        public async Task<ActionResult<IEnumerable<PatientVisit>>> GetVisits(
+            [FromQuery] int? patientId)
         {
-            return await _context.PatientVisits
+            var query = _context.PatientVisits
                 .Include(x => x.Patient)
-                .Include(x => x.Branch)
                 .Include(x => x.Staff)
                 .Include(x => x.Treatment)
-                .Where(x => !x.IsDeleted)
-                .OrderByDescending(x => x.VisitId)
+                .Include(x => x.PatientImages)
+                .Where(x => !x.IsDeleted);
+
+            if (patientId.HasValue)
+                query = query.Where(x => x.PatientId == patientId.Value);
+
+            return await query
+                .OrderByDescending(x => x.VisitDate)
+                .ThenByDescending(x => x.VisitTime)
                 .ToListAsync();
         }
 
-        // GET: api/PatientVisits/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<PatientVisit>> GetPatientVisit(int id)
+        public async Task<ActionResult<PatientVisit>> GetVisit(int id)
         {
-            var visit = await _context.PatientVisits
+            var item = await _context.PatientVisits
                 .Include(x => x.Patient)
-                .Include(x => x.Branch)
                 .Include(x => x.Staff)
                 .Include(x => x.Treatment)
                 .Include(x => x.PatientImages)
                 .FirstOrDefaultAsync(x => x.VisitId == id && !x.IsDeleted);
-
-            if (visit == null)
-                return NotFound();
-
-            return visit;
+            if (item == null) return NotFound();
+            return item;
         }
 
-        // POST: api/PatientVisits
         [HttpPost]
-        public async Task<ActionResult<PatientVisit>> PostPatientVisit(PatientVisit visit)
+        public async Task<ActionResult<PatientVisit>> PostVisit(PatientVisit item)
         {
-            visit.CreatedAt = DateTime.Now;
-            visit.IsDeleted = false;
-
-            _context.PatientVisits.Add(visit);
+            ModelState.Clear();
+            item.IsDeleted = false;
+            item.CreatedAt = DateTime.Now;
+            item.BranchId = item.BranchId == 0 ? 1 : item.BranchId;
+            _context.PatientVisits.Add(item);
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetPatientVisit),
-                new { id = visit.VisitId },
-                visit);
+            return CreatedAtAction(nameof(GetVisit), new { id = item.VisitId }, item);
         }
 
-        // PUT: api/PatientVisits/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPatientVisit(int id, PatientVisit visit)
+        public async Task<IActionResult> PutVisit(int id, PatientVisit item)
         {
-            if (id != visit.VisitId)
-                return BadRequest();
-
+            ModelState.Clear();
             var existing = await _context.PatientVisits.FindAsync(id);
+            if (existing == null) return NotFound();
 
-            if (existing == null)
-                return NotFound();
-
-            existing.PatientId = visit.PatientId;
-            existing.BranchId = visit.BranchId;
-            existing.TreatmentId = visit.TreatmentId;
-            existing.StaffId = visit.StaffId;
-            existing.VisitDate = visit.VisitDate;
-            existing.VisitTime = visit.VisitTime;
-            existing.Notes = visit.Notes;
+            existing.PatientId = item.PatientId;
+            existing.StaffId = item.StaffId;
+            existing.TreatmentId = item.TreatmentId;
+            existing.VisitDate = item.VisitDate;
+            existing.VisitTime = item.VisitTime;
+            existing.Notes = item.Notes;
             existing.UpdatedAt = DateTime.Now;
 
             await _context.SaveChangesAsync();
-
             return NoContent();
         }
 
-        // DELETE: api/PatientVisits/5 (Soft Delete)
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePatientVisit(int id)
+        public async Task<IActionResult> DeleteVisit(int id)
         {
-            var visit = await _context.PatientVisits.FindAsync(id);
-
-            if (visit == null)
-                return NotFound();
-
-            visit.IsDeleted = true;
-            visit.UpdatedAt = DateTime.Now;
-
+            var item = await _context.PatientVisits.FindAsync(id);
+            if (item == null) return NotFound();
+            item.IsDeleted = true;
+            item.UpdatedAt = DateTime.Now;
             await _context.SaveChangesAsync();
-
             return NoContent();
         }
+
+
     }
 }

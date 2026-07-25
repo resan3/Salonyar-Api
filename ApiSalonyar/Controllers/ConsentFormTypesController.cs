@@ -1,4 +1,5 @@
 ﻿using ApiSalonyar.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,81 +10,39 @@ namespace ApiSalonyar.Controllers
     public class ConsentFormTypesController : ControllerBase
     {
         private readonly ClinicDbContext _context;
+        public ConsentFormTypesController(ClinicDbContext context) => _context = context;
 
-        public ConsentFormTypesController(ClinicDbContext context)
-        {
-            _context = context;
-        }
-
-        // GET: api/ConsentFormTypes
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ConsentFormType>>> GetConsentFormTypes()
-        {
-            return await _context.ConsentFormTypes
-                .OrderBy(x => x.Title)
-                .ToListAsync();
-        }
+        public async Task<ActionResult<IEnumerable<ConsentFormType>>> GetTypes()
+            => await _context.ConsentFormTypes.OrderBy(x => x.Title).ToListAsync();
 
-        // GET: api/ConsentFormTypes/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ConsentFormType>> GetConsentFormType(int id)
-        {
-            var consentFormType = await _context.ConsentFormTypes.FindAsync(id);
-
-            if (consentFormType == null)
-                return NotFound();
-
-            return consentFormType;
-        }
-
-        // POST: api/ConsentFormTypes
         [HttpPost]
-        public async Task<ActionResult<ConsentFormType>> PostConsentFormType(ConsentFormType consentFormType)
+        public async Task<ActionResult<ConsentFormType>> PostType(ConsentFormType item)
         {
-            _context.ConsentFormTypes.Add(consentFormType);
+            ModelState.Clear();
+            _context.ConsentFormTypes.Add(item);
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetConsentFormType),
-                new { id = consentFormType.ConsentFormTypeId },
-                consentFormType);
+            return Ok(item);
         }
 
-        // PUT: api/ConsentFormTypes/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutConsentFormType(int id, ConsentFormType consentFormType)
+        public async Task<IActionResult> PutType(int id, ConsentFormType item)
         {
-            if (id != consentFormType.ConsentFormTypeId)
-                return BadRequest();
-
-            _context.Entry(consentFormType).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await _context.ConsentFormTypes.AnyAsync(x => x.ConsentFormTypeId == id))
-                    return NotFound();
-
-                throw;
-            }
-
+            ModelState.Clear();
+            var existing = await _context.ConsentFormTypes.FindAsync(id);
+            if (existing == null) return NotFound();
+            existing.Title = item.Title;
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
-        // DELETE: api/ConsentFormTypes/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteConsentFormType(int id)
+        public async Task<IActionResult> DeleteType(int id)
         {
-            var consentFormType = await _context.ConsentFormTypes.FindAsync(id);
-
-            if (consentFormType == null)
-                return NotFound();
-
-            _context.ConsentFormTypes.Remove(consentFormType);
+            var item = await _context.ConsentFormTypes.FindAsync(id);
+            if (item == null) return NotFound();
+            _context.ConsentFormTypes.Remove(item);
             await _context.SaveChangesAsync();
-
             return NoContent();
         }
     }

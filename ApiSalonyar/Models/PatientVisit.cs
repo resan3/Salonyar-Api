@@ -23,11 +23,11 @@ namespace ApiSalonyar.Models
         public DateTime? UpdatedAt { get; set; }
         public bool IsDeleted { get; set; }
 
-        public virtual Branch Branch { get; set; } = null!;
-        public virtual Patient Patient { get; set; } = null!;
-        public virtual staff Staff { get; set; } = null!;
-        public virtual Treatment Treatment { get; set; } = null!;
-        public virtual ICollection<PatientImage> PatientImages { get; set; }
-        public virtual ICollection<RoomReservation> RoomReservations { get; set; }
+        public virtual Branch? Branch { get; set; }
+        public virtual Patient? Patient { get; set; }
+        public virtual staff? Staff { get; set; }
+        public virtual Treatment? Treatment { get; set; }
+        public virtual ICollection<PatientImage>? PatientImages { get; set; }
+        public virtual ICollection<RoomReservation>? RoomReservations { get; set; }
     }
 }

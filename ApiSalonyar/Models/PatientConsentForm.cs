@@ -14,8 +14,8 @@ namespace ApiSalonyar.Models
         public DateTime CreatedAt { get; set; }
         public bool IsDeleted { get; set; }
 
-        public virtual ConsentFormType ConsentFormType { get; set; } = null!;
-        public virtual Patient Patient { get; set; } = null!;
+        public virtual ConsentFormType? ConsentFormType { get; set; } = null!;
+        public virtual Patient? Patient { get; set; } = null!;
         public virtual User? UploadedByUser { get; set; }
     }
 }

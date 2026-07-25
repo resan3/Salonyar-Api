@@ -1,4 +1,5 @@
 ﻿using ApiSalonyar.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,7 +9,7 @@ namespace ApiSalonyar.Controllers
     [ApiController]
     public class PatientImagesController : ControllerBase
     {
-/*        private readonly ClinicDbContext _context;
+        private readonly ClinicDbContext _context;
         private readonly IWebHostEnvironment _env;
 
         public PatientImagesController(ClinicDbContext context, IWebHostEnvironment env)
@@ -17,98 +18,103 @@ namespace ApiSalonyar.Controllers
             _env = env;
         }
 
-        // GET: api/PatientImages
+        // GET: api/PatientImages?visitId=5
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<PatientImage>>> GetImages()
+        public async Task<ActionResult<IEnumerable<PatientImage>>> GetImages(
+            [FromQuery] int? visitId)
         {
-            return await _context.PatientImages
+            var query = _context.PatientImages
                 .Include(x => x.Visit)
-                .Where(x => !x.IsDeleted)
-                .OrderByDescending(x => x.ImageId)
-                .ToListAsync();
+                .Where(x => !x.IsDeleted);
+
+            if (visitId.HasValue)
+                query = query.Where(x => x.VisitId == visitId.Value);
+
+            return await query.OrderByDescending(x => x.CreatedAt).ToListAsync();
         }
 
-        // GET: api/PatientImages/5
         [HttpGet("{id}")]
         public async Task<ActionResult<PatientImage>> GetImage(int id)
         {
-            var img = await _context.PatientImages
+            var item = await _context.PatientImages
                 .Include(x => x.Visit)
                 .FirstOrDefaultAsync(x => x.ImageId == id && !x.IsDeleted);
-
-            if (img == null)
-                return NotFound();
-
-            return img;
+            if (item == null) return NotFound();
+            return item;
         }
 
-        // POST: Upload Image (Before/After)
+        // POST: api/PatientImages/upload
+        // آپلود فایل + ذخیره آدرس
         [HttpPost("upload")]
-        public async Task<IActionResult> UploadImage(
+        public async Task<ActionResult<object>> UploadImage(
             [FromForm] int visitId,
-            [FromForm] IFormFile? beforeImage,
-            [FromForm] IFormFile? afterImage,
-            [FromForm] string? description)
+            [FromForm] string imageType,       // "before" یا "after"
+            [FromForm] string? description,
+            IFormFile file)
         {
-            var uploadPath = Path.Combine(_env.WebRootPath, "uploads");
+            if (file == null || file.Length == 0)
+                return BadRequest("فایلی انتخاب نشده.");
 
-            if (!Directory.Exists(uploadPath))
-                Directory.CreateDirectory(uploadPath);
+            // چک نوع فایل
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var ext = Path.GetExtension(file.FileName).ToLower();
+            if (!allowed.Contains(ext))
+                return BadRequest("فقط فایل‌های تصویری مجاز هستند.");
 
-            string? beforePath = null;
-            string? afterPath = null;
+            // ساخت پوشه ذخیره‌سازی
+            var uploadPath = Path.Combine("D:\\ClinicUploads", "patients", visitId.ToString());
+            Directory.CreateDirectory(uploadPath);
 
-            if (beforeImage != null)
+            // نام یکتا برای فایل
+            var fileName = $"{imageType}_{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid().ToString()[..8]}{ext}";
+            var filePath = Path.Combine(uploadPath, fileName);
+
+            // ذخیره فایل
+            using (var stream = new FileStream(filePath, FileMode.Create))
+                await file.CopyToAsync(stream);
+
+            // آدرس نسبی برای ذخیره در دیتابیس
+            var relativePath = $"/uploads/patients/{visitId}/{fileName}";
+
+            // پیدا کردن یا ساخت رکورد PatientImage برای این Visit
+            var existing = await _context.PatientImages
+                .FirstOrDefaultAsync(x => x.VisitId == visitId && !x.IsDeleted);
+
+            if (existing == null)
             {
-                var fileName = Guid.NewGuid() + Path.GetExtension(beforeImage.FileName);
-                var fullPath = Path.Combine(uploadPath, fileName);
-
-                using var stream = new FileStream(fullPath, FileMode.Create);
-                await beforeImage.CopyToAsync(stream);
-
-                beforePath = "/uploads/" + fileName;
+                existing = new PatientImage
+                {
+                    VisitId = visitId,
+                    CreatedAt = DateTime.Now,
+                    IsDeleted = false,
+                    Description = description,
+                };
+                _context.PatientImages.Add(existing);
             }
 
-            if (afterImage != null)
-            {
-                var fileName = Guid.NewGuid() + Path.GetExtension(afterImage.FileName);
-                var fullPath = Path.Combine(uploadPath, fileName);
+            // ست کردن مسیر قبل یا بعد
+            if (imageType == "before")
+                existing.BeforeImagePath = relativePath;
+            else
+                existing.AfterImagePath = relativePath;
 
-                using var stream = new FileStream(fullPath, FileMode.Create);
-                await afterImage.CopyToAsync(stream);
+            if (!string.IsNullOrEmpty(description))
+                existing.Description = description;
 
-                afterPath = "/uploads/" + fileName;
-            }
-
-            var entity = new PatientImage
-            {
-                VisitId = visitId,
-                BeforeImagePath = beforePath,
-                AfterImagePath = afterPath,
-                Description = description,
-                CreatedAt = DateTime.Now,
-                IsDeleted = false
-            };
-
-            _context.PatientImages.Add(entity);
             await _context.SaveChangesAsync();
 
-            return Ok(entity);
+            return Ok(new { path = relativePath, imageId = existing.ImageId });
         }
 
-        // DELETE (soft delete)
+        // DELETE: api/PatientImages/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteImage(int id)
         {
-            var img = await _context.PatientImages.FindAsync(id);
-
-            if (img == null)
-                return NotFound();
-
-            img.IsDeleted = true;
+            var item = await _context.PatientImages.FindAsync(id);
+            if (item == null) return NotFound();
+            item.IsDeleted = true;
             await _context.SaveChangesAsync();
-
             return NoContent();
-        }*/
+        }
     }
 }

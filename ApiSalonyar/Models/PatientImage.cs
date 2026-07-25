@@ -13,6 +13,6 @@ namespace ApiSalonyar.Models
         public DateTime CreatedAt { get; set; }
         public bool IsDeleted { get; set; }
 
-        public virtual PatientVisit Visit { get; set; } = null!;
+        public virtual PatientVisit? Visit { get; set; } = null!;
     }
 }

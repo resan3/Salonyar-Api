@@ -13,6 +13,6 @@ namespace ApiSalonyar.Models
         public int ConsentFormTypeId { get; set; }
         public string Title { get; set; } = null!;
 
-        public virtual ICollection<PatientConsentForm> PatientConsentForms { get; set; }
+        public virtual ICollection<PatientConsentForm>? PatientConsentForms { get; set; }
     }
 }

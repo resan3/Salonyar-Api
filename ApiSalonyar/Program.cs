@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,7 +32,13 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
-
+// بعد از var app = builder.Build();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
+        "D:\\ClinicUploads"),
+    RequestPath = "/uploads"
+});
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
