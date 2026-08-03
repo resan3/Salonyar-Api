@@ -9,7 +9,7 @@ namespace ApiSalonyar.Models
         public int PermissionId { get; set; }
         public bool IsGranted { get; set; }
 
-        public virtual Permission Permission { get; set; } = null!;
-        public virtual User User { get; set; } = null!;
+        public virtual Permission? Permission { get; set; } = null!;
+        public virtual User? User { get; set; } = null!;
     }
 }

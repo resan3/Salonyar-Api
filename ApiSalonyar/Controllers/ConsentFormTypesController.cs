@@ -45,5 +45,35 @@ namespace ApiSalonyar.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+
+        [HttpPost("upload-template/{id}")]
+        public async Task<ActionResult<object>> UploadTemplate(int id, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("فایلی انتخاب نشده.");
+
+            var ext = Path.GetExtension(file.FileName).ToLower();
+            if (ext != ".pdf")
+                return BadRequest("فقط فایل PDF مجاز است.");
+
+            var uploadPath = "D:\\ClinicUploads\\templates";
+            Directory.CreateDirectory(uploadPath);
+
+            var fileName = $"template_{id}_{DateTime.Now:yyyyMMdd_HHmmss}{ext}";
+            var filePath = Path.Combine(uploadPath, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+                await file.CopyToAsync(stream);
+
+            var relativePath = $"/uploads/templates/{fileName}";
+
+            var item = await _context.ConsentFormTypes.FindAsync(id);
+            if (item == null) return NotFound();
+            item.TemplatePath = relativePath;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { path = relativePath });
+        }
     }
 }

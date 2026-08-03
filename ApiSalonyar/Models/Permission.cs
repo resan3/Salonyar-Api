@@ -16,8 +16,8 @@ namespace ApiSalonyar.Models
         public string Title { get; set; } = null!;
         public string ModuleName { get; set; } = null!;
 
-        public virtual ICollection<UserPermission> UserPermissions { get; set; }
+        public virtual ICollection<UserPermission>? UserPermissions { get; set; }
 
-        public virtual ICollection<Role> Roles { get; set; }
+        public virtual ICollection<Role>? Roles { get; set; }
     }
 }

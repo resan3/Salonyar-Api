@@ -6,6 +6,17 @@ using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.SuppressModelStateInvalidFilter = true; // ✅ validation خودکار رو خاموش کن
+    })
+    .AddJsonOptions(opt => {
+        opt.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
+
 // ✅ فقط یک بار - با همه تنظیمات
 builder.Services.AddControllers()
     .AddJsonOptions(opt => {

@@ -22,10 +22,10 @@ namespace ApiSalonyar.Models
         public bool IsDeleted { get; set; }
 
         public virtual staff? Staff { get; set; }
-        public virtual ICollection<PatientConsentForm> PatientConsentForms { get; set; }
-        public virtual ICollection<RoomReservation> RoomReservations { get; set; }
-        public virtual ICollection<UserPermission> UserPermissions { get; set; }
+        public virtual ICollection<PatientConsentForm>? PatientConsentForms { get; set; }
+        public virtual ICollection<RoomReservation>? RoomReservations { get; set; }
+        public virtual ICollection<UserPermission>? UserPermissions { get; set; }
 
-        public virtual ICollection<Role> Roles { get; set; }
+        public virtual ICollection<Role>? Roles { get; set; }
     }
 }
