@@ -97,6 +97,8 @@ namespace ApiSalonyar.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutReservation(int id, [FromBody] RoomReservation item)
         {
+            if (item == null)
+                return BadRequest("BODY IS NULL");
             ModelState.Clear();
             var existing = await _context.RoomReservations.FindAsync(id);
             if (existing == null) return NotFound();

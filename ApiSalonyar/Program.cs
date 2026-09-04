@@ -6,34 +6,27 @@ using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+// ✅ فقط یک بار AddControllers
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
     {
-        options.SuppressModelStateInvalidFilter = true; // ✅ validation خودکار رو خاموش کن
+        options.SuppressModelStateInvalidFilter = true;
     })
     .AddJsonOptions(opt => {
         opt.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
-// ✅ فقط یک بار - با همه تنظیمات
-builder.Services.AddControllers()
-    .AddJsonOptions(opt => {
-        opt.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-        opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-    });
+// ✅ Background Service
+builder.Services.AddHostedService<ApiSalonyar.Services.NotificationBackgroundService>();
 
-// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// DbContext
 builder.Services.AddDbContext<ClinicDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReact", policy =>
@@ -43,13 +36,14 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
-// بعد از var app = builder.Build();
+
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
         "D:\\ClinicUploads"),
     RequestPath = "/uploads"
 });
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

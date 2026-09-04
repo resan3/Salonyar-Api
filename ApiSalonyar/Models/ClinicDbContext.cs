@@ -43,6 +43,36 @@ namespace ApiSalonyar.Models
         public virtual DbSet<UserPermission> UserPermissions { get; set; } = null!;
         public virtual DbSet<staff> staff { get; set; } = null!;
 
+
+
+
+
+
+
+
+
+
+        public virtual DbSet<CashRegister> CashRegisters { get; set; } = null!;
+        public virtual DbSet<Expense> Expenses { get; set; } = null!;
+        public virtual DbSet<ExpenseCategory> ExpenseCategories { get; set; } = null!;
+        public virtual DbSet<Invoice> Invoices { get; set; } = null!;
+        public virtual DbSet<InvoiceItem> InvoiceItems { get; set; } = null!;
+        public virtual DbSet<Payment> Payments { get; set; } = null!;
+        public virtual DbSet<PaymentMethod> PaymentMethods { get; set; } = null!;
+        public virtual DbSet<Refund> Refunds { get; set; } = null!;
+        public virtual DbSet<Notification> Notifications { get; set; } = null!;
+
+
+
+
+
+
+
+
+
+
+
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -587,6 +617,48 @@ namespace ApiSalonyar.Models
                     .HasForeignKey(d => d.ProfessionId)
                     .HasConstraintName("FK__Staff__Professio__5AEE82B9");
             });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            // ✅ اینجا اضافه کن - قبل از آخرین }
+            modelBuilder.Entity<PaymentMethod>().ToTable("PaymentMethod", "Accounting");
+            modelBuilder.Entity<CashRegister>().ToTable("CashRegister", "Accounting");
+            modelBuilder.Entity<Invoice>().ToTable("Invoice", "Accounting");
+            modelBuilder.Entity<InvoiceItem>().ToTable("InvoiceItem", "Accounting");
+            modelBuilder.Entity<Payment>().ToTable("Payment", "Accounting");
+            modelBuilder.Entity<Refund>().ToTable("Refund", "Accounting");
+            modelBuilder.Entity<ExpenseCategory>().ToTable("ExpenseCategory", "Accounting");
+            modelBuilder.Entity<Expense>().ToTable("Expense", "Accounting");
+            modelBuilder.Entity<Notification>().ToTable("Notification", "Notifications");
+
+
 
             OnModelCreatingPartial(modelBuilder);
         }
