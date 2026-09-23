@@ -37,13 +37,26 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+/*app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider("D:\\ClinicUploads"),
+    RequestPath = "/uploads"
+});*//*
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
-        "D:\\ClinicUploads"),
+        "C:\\wwwroot\\heseno\\api.rayanakshop.ir\\wwwroot\\uploads"),
     RequestPath = "/uploads"
 });
+*/
 
+var uploadPath = builder.Configuration["UploadPath"] ?? "D:\\ClinicUploads";
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadPath),
+    RequestPath = "/uploads"
+});
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

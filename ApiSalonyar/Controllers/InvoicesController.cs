@@ -51,6 +51,15 @@ namespace ApiSalonyar.Controllers
         public async Task<ActionResult<Invoice>> PostInvoice(Invoice item)
         {
             ModelState.Clear();
+            // ✅ چک کن قبلاً برای این رزرو فاکتور ثبت شده یا نه
+            if (item.ReservationId.HasValue)
+            {
+                var exists = await _context.Invoices
+                    .AnyAsync(x => !x.IsDeleted &&
+                              x.ReservationId == item.ReservationId);
+                if (exists)
+                    return BadRequest("برای این رزرو قبلاً فاکتور ثبت شده است.");
+            }
             item.IsDeleted = false;
             item.CreatedAt = DateTime.Now;
             item.BranchId = item.BranchId == 0 ? 1 : item.BranchId;

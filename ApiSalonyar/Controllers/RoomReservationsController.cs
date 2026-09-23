@@ -32,33 +32,132 @@ namespace ApiSalonyar.Controllers
 
             return await query.AnyAsync();
         }
-
-        // GET: api/RoomReservations?date=2025-04-01
-        // این Endpoint برای نمای شماتیک استفاده میشه
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<RoomReservation>>> GetReservations(
-            [FromQuery] DateTime? date,
-            [FromQuery] int? roomId)
+        [HttpGet]
+        public async Task<ActionResult> GetReservations(
+    [FromQuery] DateTime? date,
+    [FromQuery] int? roomId)
         {
             var query = _context.RoomReservations
-                .Include(x => x.Patient)
-                .Include(x => x.Staff)
-                .Include(x => x.Room)
-                .Include(x => x.Treatment)
-                .Include(x => x.ReservationStatus)
                 .Where(x => !x.IsDeleted);
 
             if (date.HasValue)
-                query = query.Where(x => x.ReservationDate == date.Value); // ✅ مستقیم مقایسه
+                query = query.Where(x =>
+                    x.ReservationDate.Year == date.Value.Year &&
+                    x.ReservationDate.Month == date.Value.Month &&
+                    x.ReservationDate.Day == date.Value.Day);
 
             if (roomId.HasValue)
                 query = query.Where(x => x.RoomId == roomId.Value);
 
-            return await query
+            var result = await query
                 .OrderBy(x => x.RoomId)
                 .ThenBy(x => x.StartTime)
+                .Select(x => new {
+                    x.ReservationId,
+                    x.PatientId,
+                    x.StaffId,
+                    x.RoomId,
+                    x.TreatmentId,
+                    x.ReservationStatusId,
+                    x.ReservationDate,
+                    x.StartTime,
+                    x.EndTime,
+                    x.Notes,
+                    x.StaffIsFixed,
+                    x.StaffFixedNote,
+                    x.VisitId,
+            // فقط فیلدهای لازم از Navigation Properties
+                    Patient = x.Patient == null ? null : new
+                    {
+                        x.Patient.PatientId,
+                        x.Patient.FirstName,
+                        x.Patient.LastName,
+                        x.Patient.Mobile
+                    },
+                    Staff = x.Staff == null ? null : new
+                    {
+                        x.Staff.StaffId,
+                        x.Staff.FullName
+                    },
+                    Room = x.Room == null ? null : new
+                    {
+                        x.Room.RoomId,
+                        x.Room.Title
+                    },
+                    Treatment = x.Treatment == null ? null : new
+                    {
+                        x.Treatment.TreatmentId,
+                        x.Treatment.Title,
+                        x.Treatment.Price
+                    },
+                    ReservationStatus = x.ReservationStatus == null ? null : new
+                    {
+                        x.ReservationStatus.ReservationStatusId,
+                        x.ReservationStatus.Title,
+                        x.ReservationStatus.ColorHex
+                    },
+                })
                 .ToListAsync();
+
+            return Ok(result);
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // GET: api/RoomReservations?date=2025-04-01
+        // این Endpoint برای نمای شماتیک استفاده میشه
+        /*        [HttpGet]
+                public async Task<ActionResult<IEnumerable<RoomReservation>>> GetReservations(
+                    [FromQuery] DateTime? date,
+                    [FromQuery] int? roomId)
+                {
+                    var query = _context.RoomReservations
+                        .Include(x => x.Patient)
+                        .Include(x => x.Staff)
+                        .Include(x => x.Room)
+                        .Include(x => x.Treatment)
+                        .Include(x => x.ReservationStatus)
+                        .Where(x => !x.IsDeleted);
+
+                    if (date.HasValue)
+                        query = query.Where(x => x.ReservationDate == date.Value); // ✅ مستقیم مقایسه
+
+                    if (roomId.HasValue)
+                        query = query.Where(x => x.RoomId == roomId.Value);
+
+                    return await query
+                        .OrderBy(x => x.RoomId)
+                        .ThenBy(x => x.StartTime)
+                        .ToListAsync();
+                }*/
 
         [HttpGet("{id}")]
         public async Task<ActionResult<RoomReservation>> GetReservation(int id)
@@ -107,6 +206,10 @@ namespace ApiSalonyar.Controllers
             if (await HasConflict(item.RoomId, item.StaffId, item.ReservationDate, item.StartTime, item.EndTime, id))
                 return BadRequest("تداخل زمانی وجود دارد. این اتاق یا همکار در این بازه زمانی رزرو دارد.");
 
+            // ✅ اگه قبلاً تثبیت شده، همکار رو نمیشه تغییر داد
+            if (existing.StaffIsFixed && existing.StaffId != item.StaffId)
+                return BadRequest("همکار این رزرو تثبیت شده و قابل تغییر نیست.");
+
             existing.PatientId = item.PatientId;
             existing.StaffId = item.StaffId;
             existing.RoomId = item.RoomId;
@@ -114,7 +217,8 @@ namespace ApiSalonyar.Controllers
             existing.ReservationStatusId = item.ReservationStatusId;
             existing.ReservationDate = item.ReservationDate;
             existing.Notes = item.Notes;
-
+            existing.StaffIsFixed = item.StaffIsFixed;
+            existing.StaffFixedNote = item.StaffFixedNote;
             // TimeSpan رو جدا parse کن
             if (TimeSpan.TryParse(item.StartTime.ToString(), out var start))
                 existing.StartTime = start;

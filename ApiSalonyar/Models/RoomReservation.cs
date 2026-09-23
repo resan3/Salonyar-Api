@@ -20,6 +20,8 @@ namespace ApiSalonyar.Models
         public string? Notes { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsDeleted { get; set; }
+        public bool StaffIsFixed { get; set; }
+        public string? StaffFixedNote { get; set; }
 
         // ✅ فقط ? - بدون = null!
         public virtual Branch? Branch { get; set; }

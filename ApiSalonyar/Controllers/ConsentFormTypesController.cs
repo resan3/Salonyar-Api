@@ -10,7 +10,12 @@ namespace ApiSalonyar.Controllers
     public class ConsentFormTypesController : ControllerBase
     {
         private readonly ClinicDbContext _context;
-        public ConsentFormTypesController(ClinicDbContext context) => _context = context;
+        private readonly string _uploadPath;  // ✅ اضافه کن
+        public ConsentFormTypesController(ClinicDbContext context, IConfiguration configuration)
+        {
+            _context = context;
+            _uploadPath = configuration["UploadPath"] ?? "D:\\ClinicUploads";  // ✅ اضافه کن
+        }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ConsentFormType>>> GetTypes()
@@ -57,7 +62,9 @@ namespace ApiSalonyar.Controllers
             if (ext != ".pdf")
                 return BadRequest("فقط فایل PDF مجاز است.");
 
-            var uploadPath = "D:\\ClinicUploads\\templates";
+            //  var uploadPath = "D:\\ClinicUploads\\templates";
+            // var uploadPath = "C:\\wwwroot\\heseno\\api.rayanakshop.ir\\wwwroot\\uploads\\templates";
+            var uploadPath = Path.Combine(_uploadPath);
             Directory.CreateDirectory(uploadPath);
 
             var fileName = $"template_{id}_{DateTime.Now:yyyyMMdd_HHmmss}{ext}";

@@ -16,6 +16,7 @@ namespace ApiSalonyar.Models
         public int BranchId { get; set; }
         public int TreatmentId { get; set; }
         public int StaffId { get; set; }
+        public int? ReservationId { get; set; }
         public DateTime VisitDate { get; set; }
         public TimeSpan VisitTime { get; set; }
         public string? Notes { get; set; }

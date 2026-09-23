@@ -10,7 +10,12 @@ namespace ApiSalonyar.Controllers
     public class PatientConsentFormsController : ControllerBase
     {
         private readonly ClinicDbContext _context;
-        public PatientConsentFormsController(ClinicDbContext context) => _context = context;
+        private readonly string _uploadPath;  // ✅ اضافه کن
+        public PatientConsentFormsController(ClinicDbContext context ,IConfiguration configuration)
+        {
+            _context = context;
+            _uploadPath = configuration["UploadPath"] ?? "D:\\ClinicUploads";  // ✅ اضافه کن
+        } 
 
         // GET: api/PatientConsentForms?patientId=5
         [HttpGet]
@@ -44,7 +49,10 @@ namespace ApiSalonyar.Controllers
                 return BadRequest("فقط فایل PDF مجاز است.");
 
             // ساخت پوشه
-            var uploadPath = Path.Combine("D:\\ClinicUploads", "consent", patientId.ToString());
+            // var uploadPath = Path.Combine("D:\\ClinicUploads", "consent", patientId.ToString());
+            // var uploadPath = Path.Combine("C:\\wwwroot\\heseno\\api.rayanakshop.ir\\wwwroot\\uploads", "consent", patientId.ToString());
+            var uploadPath = Path.Combine(_uploadPath, "patients", patientId.ToString());
+
             Directory.CreateDirectory(uploadPath);
 
             // نام یکتا

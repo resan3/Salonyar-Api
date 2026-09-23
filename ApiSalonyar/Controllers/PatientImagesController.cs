@@ -11,11 +11,16 @@ namespace ApiSalonyar.Controllers
     {
         private readonly ClinicDbContext _context;
         private readonly IWebHostEnvironment _env;
+        private readonly string _uploadPath;  // ✅ اضافه کن
 
-        public PatientImagesController(ClinicDbContext context, IWebHostEnvironment env)
+
+
+            public PatientImagesController(ClinicDbContext context, IWebHostEnvironment env, IConfiguration configuration)
         {
             _context = context;
             _env = env;
+            _uploadPath = configuration["UploadPath"] ?? "D:\\ClinicUploads";  // ✅ اضافه کن
+
         }
 
         // GET: api/PatientImages?visitId=5
@@ -62,7 +67,9 @@ namespace ApiSalonyar.Controllers
                 return BadRequest("فقط فایل‌های تصویری مجاز هستند.");
 
             // ساخت پوشه ذخیره‌سازی
-            var uploadPath = Path.Combine("D:\\ClinicUploads", "patients", visitId.ToString());
+            //var uploadPath = Path.Combine("D:\\ClinicUploads", "patients", visitId.ToString());
+            // var uploadPath = Path.Combine("C:\\wwwroot\\heseno\\api.rayanakshop.ir\\wwwroot\\uploads", "patients", visitId.ToString());
+            var uploadPath = Path.Combine(_uploadPath, "patients", visitId.ToString());
             Directory.CreateDirectory(uploadPath);
 
             // نام یکتا برای فایل
