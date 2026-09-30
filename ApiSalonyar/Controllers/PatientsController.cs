@@ -17,18 +17,33 @@ namespace ApiSalonyar.Controllers
 
         // GET: api/Patients
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Patient>>> GetPatients()
+        public async Task<ActionResult> GetPatients()
         {
-            return await _context.Patients
-                .Include(x => x.Branch)
-                .Include(x => x.Gender)
-                .Include(x => x.MaritalStatus)
-                .Include(x => x.PatientAllergies)  // ✅ اضافه کن
-                .Include(x => x.PatientDiseases)   // ✅ اضافه کن
-                .Include(x => x.BloodType)
+            var result = await _context.Patients
                 .Where(x => !x.IsDeleted)
                 .OrderByDescending(x => x.PatientId)
+                .Select(x => new {
+                    x.PatientId,
+                    x.FirstName,
+                    x.LastName,
+                    x.NationalCode,
+                    x.Mobile,
+                    x.Phone,
+                    x.BirthDate,
+                    x.Address,
+                    x.ReferralDate,
+                    x.ReferralSourceId,
+                    x.BranchId,
+                    x.CreatedAt,
+                    Gender = x.Gender == null ? null : new { x.Gender.GenderId, x.Gender.Title },
+                    BloodType = x.BloodType == null ? null : new { x.BloodType.BloodTypeId, x.BloodType.Title },
+                    MaritalStatus = x.MaritalStatus == null ? null : new { x.MaritalStatus.MaritalStatusId, x.MaritalStatus.Title },
+                    PatientAllergies = x.PatientAllergies.Select(a => new { a.AllergyId }),
+                    PatientDiseases = x.PatientDiseases.Select(d => new { d.DiseaseId })
+                })
                 .ToListAsync();
+
+            return Ok(result);
         }
 
         // GET: api/Patients/5
@@ -39,8 +54,8 @@ namespace ApiSalonyar.Controllers
                 .Include(x => x.Branch)
                 .Include(x => x.Gender)
                 .Include(x => x.MaritalStatus)
-                       .Include(x => x.PatientAllergies)  // ✅ اضافه کن
-        .Include(x => x.PatientDiseases)   // ✅ اضافه کن
+                .Include(x => x.PatientAllergies)
+                .Include(x => x.PatientDiseases)
                 .Include(x => x.BloodType)
                 .FirstOrDefaultAsync(x => x.PatientId == id && !x.IsDeleted);
 
@@ -54,8 +69,6 @@ namespace ApiSalonyar.Controllers
         [HttpPost]
         public async Task<ActionResult<Patient>> PostPatient(Patient patient)
         {
-
-
             ModelState.Clear();
             patient.CreatedAt = DateTime.Now;
             patient.IsDeleted = false;
@@ -63,14 +76,22 @@ namespace ApiSalonyar.Controllers
 
             // کد ملی موقت یکتا
             if (string.IsNullOrEmpty(patient.NationalCode))
-                patient.NationalCode = DateTime.Now.Ticks.ToString().Substring(0, 15);
-
-            // چک تکراری نبودن کد ملی
-            var exists = await _context.Patients
-                .AnyAsync(x => x.NationalCode == patient.NationalCode && !x.IsDeleted);
-            if (exists)
-                patient.NationalCode = DateTime.Now.Ticks.ToString().Substring(0, 15);
-
+            {
+                string tempCode;
+                do
+                {
+                    tempCode = DateTime.Now.Ticks.ToString().Substring(0, 15);
+                } while (await _context.Patients.AnyAsync(x => x.NationalCode == tempCode && !x.IsDeleted));
+                patient.NationalCode = tempCode;
+            }
+            else
+            {
+                // چک تکراری نبودن کد ملی وارد شده
+                var exists = await _context.Patients
+                    .AnyAsync(x => x.NationalCode == patient.NationalCode && !x.IsDeleted);
+                if (exists)
+                    return BadRequest("این کد ملی قبلاً ثبت شده است.");
+            }
 
             _context.Patients.Add(patient);
             await _context.SaveChangesAsync();
@@ -133,7 +154,24 @@ namespace ApiSalonyar.Controllers
                         DiseaseId = d.DiseaseId
                     });
 
+            // ✅ چک تکراری نبودن کد ملی
+            var duplicateNc = await _context.Patients
+                .AnyAsync(x => x.NationalCode == patient.NationalCode
+                           && x.PatientId != id
+                           && !x.IsDeleted);
+            if (duplicateNc)
+                return BadRequest("این کد ملی برای بیمار دیگری ثبت شده است.");
+
+            // ✅ چک تکراری نبودن موبایل
+            var duplicateMobile = await _context.Patients
+                .AnyAsync(x => x.Mobile == patient.Mobile
+                           && x.PatientId != id
+                           && !x.IsDeleted);
+            if (duplicateMobile)
+                return BadRequest("این شماره موبایل برای بیمار دیگری ثبهت شده است.");
+
             await _context.SaveChangesAsync();
+
             return NoContent();
         }
 

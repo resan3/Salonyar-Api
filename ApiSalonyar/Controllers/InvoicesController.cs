@@ -13,24 +13,44 @@ namespace ApiSalonyar.Controllers
         public InvoicesController(ClinicDbContext context) => _context = context;
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Invoice>>> GetInvoices(
+        public async Task<ActionResult> GetInvoices(
             [FromQuery] DateTime? from,
             [FromQuery] DateTime? to,
             [FromQuery] int? patientId,
             [FromQuery] string? status)
         {
-            var query = _context.Invoices
-                .Include(x => x.Patient)
-                .Include(x => x.InvoiceItems).ThenInclude(x => x.Treatment)
-                .Include(x => x.Payments).ThenInclude(x => x.PaymentMethod)
-                .Where(x => !x.IsDeleted);
+            var query = _context.Invoices.Where(x => !x.IsDeleted);
 
             if (from.HasValue) query = query.Where(x => x.InvoiceDate >= from.Value);
             if (to.HasValue) query = query.Where(x => x.InvoiceDate <= to.Value.AddDays(1));
             if (patientId.HasValue) query = query.Where(x => x.PatientId == patientId.Value);
             if (!string.IsNullOrEmpty(status)) query = query.Where(x => x.Status == status);
 
-            return await query.OrderByDescending(x => x.InvoiceDate).ToListAsync();
+            var result = await query
+                .OrderByDescending(x => x.InvoiceDate)
+                .Select(x => new {
+                    x.InvoiceId,
+                    x.InvoiceNumber,
+                    x.InvoiceDate,
+                    x.Status,
+                    x.TotalAmount,
+                    x.FinalAmount,
+                    x.PaidAmount,
+                    x.RemainingAmount,
+                    x.DiscountAmount,
+                    x.TaxAmount,
+                    x.ReservationId,
+                    Patient = x.Patient == null ? null : new
+                    {
+                        x.Patient.PatientId,
+                        x.Patient.FirstName,
+                        x.Patient.LastName,
+                        x.Patient.Mobile
+                    }
+                })
+                .ToListAsync();
+
+            return Ok(result);
         }
 
         [HttpGet("{id}")]

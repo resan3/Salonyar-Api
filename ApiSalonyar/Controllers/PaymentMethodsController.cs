@@ -43,6 +43,7 @@ namespace ApiSalonyar.Controllers
             existing.CodeLabel = item.CodeLabel;
             existing.Description = item.Description;
             existing.IsActive = item.IsActive;
+            existing.CommissionRate = item.CommissionRate; // ✅ ذخیره درصد کارمزد
             await _context.SaveChangesAsync();
             return NoContent();
         }

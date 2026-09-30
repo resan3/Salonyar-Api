@@ -1,5 +1,4 @@
 D:\React\Api\ApiSalonyar\ApiSalonyar\bin\Debug\net6.0\appsettings.Development.json
-D:\React\Api\ApiSalonyar\ApiSalonyar\bin\Debug\net6.0\appsettings.json
 D:\React\Api\ApiSalonyar\ApiSalonyar\bin\Debug\net6.0\ApiSalonyar.exe
 D:\React\Api\ApiSalonyar\ApiSalonyar\bin\Debug\net6.0\ApiSalonyar.deps.json
 D:\React\Api\ApiSalonyar\ApiSalonyar\bin\Debug\net6.0\ApiSalonyar.runtimeconfig.json

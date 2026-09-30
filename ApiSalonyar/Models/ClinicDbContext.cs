@@ -64,13 +64,17 @@ namespace ApiSalonyar.Models
 
 
 
+        public virtual DbSet<PackageTemplate> PackageTemplates { get; set; }
+        public virtual DbSet<PatientPackage> PatientPackages { get; set; }
+        public virtual DbSet<PackageUsage> PackageUsages { get; set; }
+
+        public virtual DbSet<ClinicSettings> ClinicSettings { get; set; }
+
+        public virtual DbSet<StaffSchedule> StaffSchedules { get; set; }
 
 
 
-
-
-
-
+   
 
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -629,26 +633,13 @@ namespace ApiSalonyar.Models
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             // ✅ اینجا اضافه کن - قبل از آخرین }
-            modelBuilder.Entity<PaymentMethod>().ToTable("PaymentMethod", "Accounting");
+            modelBuilder.Entity<PaymentMethod>(entity =>
+            {
+                entity.ToTable("PaymentMethod", "Accounting");
+                entity.Property(e => e.CommissionRate).HasColumnType("decimal(5,2)");
+
+            });
             modelBuilder.Entity<CashRegister>().ToTable("CashRegister", "Accounting");
             modelBuilder.Entity<Invoice>().ToTable("Invoice", "Accounting");
             modelBuilder.Entity<InvoiceItem>().ToTable("InvoiceItem", "Accounting");
@@ -658,9 +649,28 @@ namespace ApiSalonyar.Models
             modelBuilder.Entity<Expense>().ToTable("Expense", "Accounting");
             modelBuilder.Entity<Notification>().ToTable("Notification", "Notifications");
 
+            modelBuilder.Entity<PackageTemplate>().ToTable("PackageTemplate", "Packages");
+            modelBuilder.Entity<PatientPackage>().ToTable("PatientPackage", "Packages");
+            modelBuilder.Entity<PackageUsage>(entity => {
+                entity.ToTable("PackageUsage", "Packages");
+                entity.Property(e => e.SessionDate).HasColumnType("date");
+                entity.Property(e => e.SessionTime).HasColumnType("time");
+            });
 
+            modelBuilder.Entity<ClinicSettings>(entity =>
+            {
+                entity.HasKey(e => e.SettingId);
+                entity.ToTable("ClinicSettings", "Core");
+            });
+            modelBuilder.Entity<StaffSchedule>(entity =>
+            {
+                entity.HasKey(e => e.ScheduleId);
+                entity.ToTable("StaffSchedule", "Scheduling");
+                entity.Property(e => e.ScheduleDate).HasColumnType("date");
+                entity.Property(e => e.StartTime).HasColumnType("time");
+                entity.Property(e => e.EndTime).HasColumnType("time");
+            });
 
-            OnModelCreatingPartial(modelBuilder);
         }
 
         partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

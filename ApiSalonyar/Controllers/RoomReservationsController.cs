@@ -97,6 +97,19 @@ namespace ApiSalonyar.Controllers
                         x.ReservationStatus.Title,
                         x.ReservationStatus.ColorHex
                     },
+
+
+                    // ✅ اطلاعات فاکتور برای نمایش وضعیت پرداخت
+                    Invoice = _context.Invoices
+            .Where(inv => inv.ReservationId == x.ReservationId && !inv.IsDeleted)
+            .Select(inv => new {
+                inv.InvoiceId,
+                inv.FinalAmount,
+                inv.PaidAmount,
+                inv.RemainingAmount,
+                inv.Status
+            })
+            .FirstOrDefault(),
                 })
                 .ToListAsync();
 
@@ -180,6 +193,17 @@ namespace ApiSalonyar.Controllers
             item.IsDeleted = false;
             item.CreatedAt = DateTime.Now;
             item.BranchId = item.BranchId == 0 ? 1 : item.BranchId;
+            // چک شیفت کاری همکار
+            if (item.StaffId > 0)
+            {
+                var schedule = await _context.StaffSchedules
+                    .FirstOrDefaultAsync(s => s.StaffId == item.StaffId
+                        && s.ScheduleDate.Date == item.ReservationDate.Date
+                        && !s.IsDeleted);
+
+                if (schedule != null && !schedule.IsWorkDay)
+                    return BadRequest("این همکار در این تاریخ شیفت کاری ندارد.");
+            }
             // ✅ چک تداخل
             if (await HasConflict(item.RoomId, item.StaffId, item.ReservationDate, item.StartTime, item.EndTime))
                 return BadRequest("تداخل زمانی وجود دارد. این اتاق یا همکار در این بازه زمانی رزرو دارد.");
@@ -226,6 +250,49 @@ namespace ApiSalonyar.Controllers
                 existing.EndTime = end;
 
             await _context.SaveChangesAsync();
+
+
+
+            // ✅ اگه فاکتور برای این رزرو وجود داره، آپدیت کن
+            if (item.TreatmentId.HasValue)
+            {
+                var invoice = await _context.Invoices
+                    .Include(x => x.InvoiceItems)
+                    .FirstOrDefaultAsync(x => x.ReservationId == id && !x.IsDeleted);
+
+                if (invoice != null)
+                {
+                    var treatment = await _context.Treatments.FindAsync(item.TreatmentId.Value);
+                    if (treatment != null)
+                    {
+                        // آپدیت آیتم‌های فاکتور
+                        _context.InvoiceItems.RemoveRange(invoice.InvoiceItems);
+                        _context.InvoiceItems.Add(new InvoiceItem
+                        {
+                            InvoiceId = invoice.InvoiceId,
+                            TreatmentId = treatment.TreatmentId,
+                            Description = treatment.Title,
+                            Quantity = 1,
+                            UnitPrice = treatment.Price,
+                            DiscountPercent = 0,
+                            DiscountAmount = 0,
+                            TotalPrice = treatment.Price,
+                        });
+
+                        // آپدیت مبالغ فاکتور
+                        invoice.TotalAmount = treatment.Price;
+                        invoice.DiscountAmount = 0;
+                        invoice.TaxAmount = 0;
+                        invoice.FinalAmount = treatment.Price;
+                        invoice.RemainingAmount = treatment.Price - invoice.PaidAmount;
+                        invoice.UpdatedAt = DateTime.Now;
+
+                        await _context.SaveChangesAsync();
+                    }
+                }
+            }
+
+
             return NoContent();
         }
 

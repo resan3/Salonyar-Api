@@ -14,19 +14,26 @@ namespace ApiSalonyar.Controllers
 
         // همه خدمات (اختیاری: فیلتر بر اساس گروه)
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Treatment>>> GetTreatments(
-            [FromQuery] int? groupId)
+        public async Task<ActionResult> GetTreatments([FromQuery] int? groupId)
         {
-            var query = _context.Treatments
-                .Include(x => x.TreatmentGroup)
-                .Where(x => !x.IsDeleted);
-
+            var query = _context.Treatments.Where(x => !x.IsDeleted && x.IsActive == true);
             if (groupId.HasValue)
                 query = query.Where(x => x.TreatmentGroupId == groupId);
 
-            return await query.OrderBy(x => x.TreatmentGroupId)
-                              .ThenBy(x => x.Title)
-                              .ToListAsync();
+            var result = await query
+                .OrderBy(x => x.TreatmentGroupId)
+                .ThenBy(x => x.Title)
+                .Select(x => new {
+                    x.TreatmentId,
+                    x.Title,
+                    x.Price,
+                    x.TreatmentGroupId,
+                    x.IsActive,
+                    GroupTitle = x.TreatmentGroup == null ? null : x.TreatmentGroup.Title
+                })
+                .ToListAsync();
+
+            return Ok(result);
         }
 
         [HttpGet("{id}")]

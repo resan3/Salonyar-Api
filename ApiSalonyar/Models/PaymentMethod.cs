@@ -17,8 +17,10 @@ namespace ApiSalonyar.Models
         public string? Description { get; set; }
         public bool IsActive { get; set; }
         public bool IsDeleted { get; set; }
-        public DateTime CreatedAt { get; set; }
 
+        public DateTime CreatedAt { get; set; }
+        public decimal CommissionRate { get; set; }
+        public int SortOrder { get; set; }
         public virtual ICollection<Payment>? Payments { get; set; }
         public virtual ICollection<Expense>? Expenses { get; set; }
     }
