@@ -144,7 +144,8 @@ namespace ApiSalonyar.Controllers
             }
 
             usage.PatientPackageId = id;
-            usage.UsedAt = DateTime.Now;
+           // usage.UsedAt = DateTime.Now;
+            usage.UsedAt = usage.SessionDate.HasValue ? usage.SessionDate.Value : DateTime.Now;
             usage.CreatedAt = DateTime.Now;
             usage.SessionNumber = pkg.UsedSessions + 1;
 
