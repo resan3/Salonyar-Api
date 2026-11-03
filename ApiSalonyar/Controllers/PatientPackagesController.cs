@@ -248,5 +248,38 @@ namespace ApiSalonyar.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { expiredCount = expired.Count });
         }
+
+
+        // ── حذف یک جلسه استفاده ──
+        [HttpDelete("{id}/usages/{usageId}")]
+        public async Task<IActionResult> DeleteUsage(int id, int usageId)
+        {
+            var usage = await _context.PackageUsages
+                .FirstOrDefaultAsync(x => x.PackageUsageId == usageId);
+            if (usage == null) return NotFound();
+
+            var pkg = await _context.PatientPackages.FindAsync(id);
+            if (pkg == null) return NotFound();
+
+            // حذف رزرو مرتبط (در صورت وجود)
+            if (usage.ReservationId.HasValue)
+            {
+                var reservation = await _context.RoomReservations
+                    .FirstOrDefaultAsync(x => x.ReservationId == usage.ReservationId.Value && !x.IsDeleted);
+                if (reservation != null)
+                    reservation.IsDeleted = true;
+            }
+
+            _context.PackageUsages.Remove(usage);
+
+            if (pkg.UsedSessions > 0) pkg.UsedSessions -= 1;
+            if (usage.CreditUsed.HasValue && pkg.UsedCredit >= usage.CreditUsed.Value)
+                pkg.UsedCredit -= usage.CreditUsed.Value;
+
+            if (pkg.Status == "COMPLETED") pkg.Status = "ACTIVE";
+
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
     }
 }

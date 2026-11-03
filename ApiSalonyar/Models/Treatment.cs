@@ -19,7 +19,7 @@ namespace ApiSalonyar.Models
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public bool IsDeleted { get; set; }
-
+        public int? SessionDuration { get; set; }
         public virtual TreatmentGroup? TreatmentGroup { get; set; } = null!;
         public virtual ICollection<PatientVisit> PatientVisits { get; set; }
         public virtual ICollection<RoomReservation> RoomReservations { get; set; }

@@ -130,7 +130,9 @@ namespace ApiSalonyar.Controllers
 
             // محاسبه مجدد
             existing.TotalAmount = item.InvoiceItems?.Sum(x => x.TotalPrice) ?? 0;
-            existing.DiscountAmount = existing.TotalAmount * existing.DiscountPercent / 100;
+            existing.DiscountAmount = item.DiscountAmount > 0
+                ? item.DiscountAmount
+                : existing.TotalAmount * existing.DiscountPercent / 100;
             existing.TaxAmount = (existing.TotalAmount - existing.DiscountAmount) * existing.TaxPercent / 100;
             existing.FinalAmount = existing.TotalAmount - existing.DiscountAmount + existing.TaxAmount;
             existing.RemainingAmount = existing.FinalAmount - existing.PaidAmount;

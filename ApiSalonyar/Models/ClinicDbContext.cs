@@ -506,7 +506,7 @@ namespace ApiSalonyar.Models
                 entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
 
                 entity.Property(e => e.Title).HasMaxLength(150);
-
+                entity.Property(e => e.SessionDuration).IsRequired(false);
                 entity.HasOne(d => d.TreatmentGroup)
                     .WithMany(p => p.Treatments)
                     .HasForeignKey(d => d.TreatmentGroupId)

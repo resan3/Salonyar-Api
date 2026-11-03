@@ -34,9 +34,13 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .AllowAnyMethod());
 });
-
+// این رو اضافه کن:
+builder.Services.AddResponseCompression(options => {
+    options.EnableForHttps = true;
+});
 var app = builder.Build();
-
+// این رو اضافه کن — باید اول از همه باشه
+app.UseResponseCompression();
 /*app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider("D:\\ClinicUploads"),

@@ -72,5 +72,38 @@ namespace ApiSalonyar.Controllers
 
             return NoContent();
         }
+
+        [HttpGet]
+        public async Task<ActionResult> GetPayments(
+    [FromQuery] string? notes,
+    [FromQuery] int? paymentMethodId)
+        {
+            var query = _context.Payments
+                .Include(x => x.Invoice).ThenInclude(x => x.Patient)
+                .Where(x => !x.IsDeleted);
+
+            if (!string.IsNullOrEmpty(notes))
+                query = query.Where(x => x.Notes != null && x.Notes.Contains(notes));
+            if (paymentMethodId.HasValue)
+                query = query.Where(x => x.PaymentMethodId == paymentMethodId.Value);
+
+            var result = await query.Select(x => new {
+                x.PaymentId,
+                x.Amount,
+                x.PaymentMethodId,
+                x.Notes,
+                x.PaidAt,
+                x.CreatedAt,
+                Patient = x.Invoice == null || x.Invoice.Patient == null ? null : new
+                {
+                    x.Invoice.Patient.PatientId,
+                    x.Invoice.Patient.FirstName,
+                    x.Invoice.Patient.LastName,
+                }
+            }).ToListAsync();
+
+            return Ok(result);
+        }
     }
+
 }

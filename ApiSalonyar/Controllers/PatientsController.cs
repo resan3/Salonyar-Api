@@ -155,12 +155,15 @@ namespace ApiSalonyar.Controllers
                     });
 
             // ✅ چک تکراری نبودن کد ملی
-            var duplicateNc = await _context.Patients
-                .AnyAsync(x => x.NationalCode == patient.NationalCode
-                           && x.PatientId != id
-                           && !x.IsDeleted);
-            if (duplicateNc)
-                return BadRequest("این کد ملی برای بیمار دیگری ثبت شده است.");
+            if (!string.IsNullOrEmpty(patient.NationalCode))
+            {
+                var duplicateNc = await _context.Patients
+                    .AnyAsync(x => x.NationalCode == patient.NationalCode
+                               && x.PatientId != id
+                               && !x.IsDeleted);
+                if (duplicateNc)
+                    return BadRequest("این کد ملی برای بیمار دیگری ثبت شده است.");
+            }
 
             // ✅ چک تکراری نبودن موبایل
             var duplicateMobile = await _context.Patients
