@@ -30,6 +30,11 @@ namespace ApiSalonyar.Models
         public decimal RemainingAmount { get; set; }
         public string Status { get; set; } = "PENDING";
         public string? Notes { get; set; }
+
+        // ── انعام ───────────────────────────────────────────────────
+        public decimal TipAmount { get; set; }
+        public int? TipStaffId { get; set; }   // بدون navigation — اسم از staffList فرانت
+
         public int? CreatedByUserId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }

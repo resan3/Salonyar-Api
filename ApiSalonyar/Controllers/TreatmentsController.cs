@@ -30,6 +30,7 @@ namespace ApiSalonyar.Controllers
                     x.TreatmentGroupId,
                     x.IsActive,
                     x.SessionDuration,
+                    x.UseTimePricing,   // ← اضافه کن
                     GroupTitle = x.TreatmentGroup == null ? null : x.TreatmentGroup.Title
                 })
                 .ToListAsync();
@@ -71,6 +72,7 @@ namespace ApiSalonyar.Controllers
             existing.TreatmentGroupId = item.TreatmentGroupId;
             existing.IsActive = item.IsActive;
             existing.SessionDuration = item.SessionDuration;
+            existing.UseTimePricing = item.UseTimePricing;   // ← اضافه کن
             await _context.SaveChangesAsync();
             return NoContent();
         }

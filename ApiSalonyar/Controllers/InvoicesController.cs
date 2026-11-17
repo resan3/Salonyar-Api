@@ -1,4 +1,4 @@
-﻿using ApiSalonyar.Models;
+using ApiSalonyar.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +40,8 @@ namespace ApiSalonyar.Controllers
                     x.DiscountAmount,
                     x.TaxAmount,
                     x.ReservationId,
+                    x.TipAmount,
+                    x.TipStaffId,
                     Patient = x.Patient == null ? null : new
                     {
                         x.Patient.PatientId,
@@ -58,6 +60,7 @@ namespace ApiSalonyar.Controllers
         {
             var item = await _context.Invoices
                 .Include(x => x.Patient)
+                .Include(x => x.Reservation)
                 .Include(x => x.InvoiceItems).ThenInclude(x => x.Treatment)
                 .Include(x => x.Payments).ThenInclude(x => x.PaymentMethod)
                 .Include(x => x.Payments).ThenInclude(x => x.CollectedByStaff)
@@ -71,7 +74,6 @@ namespace ApiSalonyar.Controllers
         public async Task<ActionResult<Invoice>> PostInvoice(Invoice item)
         {
             ModelState.Clear();
-            // ✅ چک کن قبلاً برای این رزرو فاکتور ثبت شده یا نه
             if (item.ReservationId.HasValue)
             {
                 var exists = await _context.Invoices
@@ -86,19 +88,23 @@ namespace ApiSalonyar.Controllers
             item.InvoiceDate = DateTime.Now;
             item.Status = "PENDING";
 
-            // شماره فاکتور خودکار
             var today = DateTime.Now;
             var count = await _context.Invoices
                 .CountAsync(x => x.InvoiceDate.Date == today.Date);
             item.InvoiceNumber = $"INV-{today:yyyyMMdd}-{(count + 1):D3}";
 
-            // محاسبه مبالغ
             item.TotalAmount = item.InvoiceItems?.Sum(x => x.TotalPrice) ?? 0;
-            item.DiscountAmount = item.TotalAmount * item.DiscountPercent / 100;
+            item.DiscountAmount = item.DiscountAmount > 0
+                ? item.DiscountAmount
+                : item.TotalAmount * item.DiscountPercent / 100;
             item.TaxAmount = (item.TotalAmount - item.DiscountAmount) * item.TaxPercent / 100;
             item.FinalAmount = item.TotalAmount - item.DiscountAmount + item.TaxAmount;
             item.PaidAmount = 0;
             item.RemainingAmount = item.FinalAmount;
+
+            // انعام — فقط ذخیره می‌کنیم، به FinalAmount اضافه نمیشه
+            item.TipAmount   = item.TipAmount > 0 ? item.TipAmount : 0;
+            item.TipStaffId  = item.TipStaffId > 0 ? item.TipStaffId : null;
 
             _context.Invoices.Add(item);
             await _context.SaveChangesAsync();
@@ -119,7 +125,10 @@ namespace ApiSalonyar.Controllers
             existing.TaxPercent = item.TaxPercent;
             existing.UpdatedAt = DateTime.Now;
 
-            // آپدیت آیتم‌ها
+            // ✅ انعام
+            existing.TipAmount  = item.TipAmount > 0 ? item.TipAmount : 0;
+            existing.TipStaffId = item.TipStaffId > 0 ? item.TipStaffId : null;
+
             _context.InvoiceItems.RemoveRange(existing.InvoiceItems ?? new List<InvoiceItem>());
             if (item.InvoiceItems != null)
                 foreach (var i in item.InvoiceItems)
@@ -128,7 +137,6 @@ namespace ApiSalonyar.Controllers
                     _context.InvoiceItems.Add(i);
                 }
 
-            // محاسبه مجدد
             existing.TotalAmount = item.InvoiceItems?.Sum(x => x.TotalPrice) ?? 0;
             existing.DiscountAmount = item.DiscountAmount > 0
                 ? item.DiscountAmount
@@ -136,6 +144,10 @@ namespace ApiSalonyar.Controllers
             existing.TaxAmount = (existing.TotalAmount - existing.DiscountAmount) * existing.TaxPercent / 100;
             existing.FinalAmount = existing.TotalAmount - existing.DiscountAmount + existing.TaxAmount;
             existing.RemainingAmount = existing.FinalAmount - existing.PaidAmount;
+
+            existing.Status = existing.PaidAmount >= existing.FinalAmount && existing.FinalAmount > 0 ? "PAID"
+                            : existing.PaidAmount > 0 ? "PARTIAL"
+                            : "PENDING";
 
             await _context.SaveChangesAsync();
             return NoContent();

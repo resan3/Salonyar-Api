@@ -79,7 +79,7 @@ namespace ApiSalonyar.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<PatientVisit>> PostVisit(PatientVisit item)
+        public async Task<ActionResult<PatientVisit>> PostVisit( PatientVisit item)
         {
             ModelState.Clear();
             // ✅ چک کن قبلاً برای این رزرو پرونده ثبت شده یا نه

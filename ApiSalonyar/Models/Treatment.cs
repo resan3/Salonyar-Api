@@ -16,6 +16,7 @@ namespace ApiSalonyar.Models
         public string Title { get; set; } = null!;
         public decimal Price { get; set; }
         public bool? IsActive { get; set; }
+        public bool UseTimePricing { get; set; } = false;
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public bool IsDeleted { get; set; }
